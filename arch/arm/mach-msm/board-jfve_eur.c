@@ -238,7 +238,7 @@ static int __init sec_tsp_mode(char *mode)
 
 	lcd_tsp_panel_version = ret;
 
-	printk(KERN_ERR "%s: LCD_ID = 0x%s, val: 0X%x, ret1: 0x%x",
+	pr_err("%s: LCD_ID = 0x%s, val: 0X%x, ret1: 0x%x",
 			__func__, mode, ret, ret1);
 
 	if (ret1 == 0x02 || ret1 == 0x03 || ret1 == 0x00)
@@ -282,7 +282,7 @@ static void max77693_haptic_power_onoff(int onoff)
 		ret = regulator_set_voltage(reg_l8, 1800000, 3000000);
 
 		if (IS_ERR(reg_l8)) {
-			printk(KERN_ERR"could not get 8921_l8, rc = %ld\n",
+			pr_err("could not get 8921_l8, rc = %ld\n",
 				PTR_ERR(reg_l8));
 			return;
 		}
@@ -291,20 +291,20 @@ static void max77693_haptic_power_onoff(int onoff)
 	if (onoff) {
 		ret = regulator_enable(reg_l8);
 		if (ret) {
-			printk(KERN_ERR"enable l8 failed, rc=%d\n", ret);
+			pr_err("enable l8 failed, rc=%d\n", ret);
 			return;
 		}
-		printk(KERN_DEBUG"haptic power_on is finished.\n");
+		pr_debug("haptic power_on is finished.\n");
 	} else {
 		if (regulator_is_enabled(reg_l8)) {
 			ret = regulator_disable(reg_l8);
 			if (ret) {
-				printk(KERN_ERR"disable l8 failed, rc=%d\n",
+				pr_err("disable l8 failed, rc=%d\n",
 									ret);
 				return;
 			}
 		}
-		printk(KERN_DEBUG"haptic power_off is finished.\n");
+		pr_debug("haptic power_off is finished.\n");
 	}
 }
 #endif
@@ -379,7 +379,7 @@ static void irda_wake_en(bool onoff)
 {
 	gpio_direction_output(PM8921_GPIO_PM_TO_SYS(PMIC_GPIO_IRDA_WAKE),
 				onoff);
-	printk(KERN_ERR "%s: irda_wake_en :%d\n", __func__, onoff);
+	pr_err("%s: irda_wake_en :%d\n", __func__, onoff);
 }
 
 static void irda_device_init(void)
@@ -394,7 +394,7 @@ static void irda_device_init(void)
 		.output_buffer		= PM_GPIO_OUT_BUF_CMOS,
 		.output_value		= 0,
 	};
-	printk(KERN_ERR "%s called!\n", __func__);	
+	pr_err("%s called!\n", __func__);	
 	gpio_request(PM8921_GPIO_PM_TO_SYS(PMIC_GPIO_IRDA_WAKE), "irda_wake");
 	gpio_direction_output(PM8921_GPIO_PM_TO_SYS(PMIC_GPIO_IRDA_WAKE), 0);
 	pm8xxx_gpio_config(PM8921_GPIO_PM_TO_SYS(	\
@@ -1007,7 +1007,15 @@ static struct platform_device ram_console_device = {
 static struct persistent_ram_descriptor per_ram_descs[] __initdata = {
        {
                .name = "ram_console",
+#ifdef CONFIG_KEXEC_HARDBOOT
+               .size = KEXEC_HB_PAGE_ADDR - RAMCONSOLE_PHYS_ADDR,
+       },
+       {
+               .name = "kexec_hb_page",
+               .size = SZ_1M - (KEXEC_HB_PAGE_ADDR - RAMCONSOLE_PHYS_ADDR),
+#else
                .size = SZ_1M,
+#endif
        }
 };
 
@@ -1097,7 +1105,7 @@ static void cypress_power_onoff(int onoff)
 		ret = regulator_set_voltage(reg_l23, 1800000, 1800000);
 
 		if (IS_ERR(reg_l23)) {
-			printk(KERN_ERR"could not get 8921_l23, rc = %ld\n",
+			printk("could not get 8921_l23, rc = %ld\n",
 				PTR_ERR(reg_l23));
 			return;
 		}
@@ -1108,7 +1116,7 @@ static void cypress_power_onoff(int onoff)
 		ret = regulator_set_voltage(reg_l11, 3300000, 3300000);
 
 		if (IS_ERR(reg_l11)) {
-			printk(KERN_ERR"could not get 8921_l11, rc = %ld\n",
+			printk("could not get 8921_l11, rc = %ld\n",
 				PTR_ERR(reg_l11));
 			return;
 		}
@@ -1117,28 +1125,28 @@ static void cypress_power_onoff(int onoff)
 	if (onoff) {
 		ret = regulator_enable(reg_l23);
 		if (ret) {
-			printk(KERN_ERR"enable l23 failed, rc=%d\n", ret);
+			printk("enable l23 failed, rc=%d\n", ret);
 			return;
 		}
 		ret = regulator_enable(reg_l11);
 		if (ret) {
-			printk(KERN_ERR"enable l11 failed, rc=%d\n", ret);
+			printk("enable l11 failed, rc=%d\n", ret);
 			return;
 		}
-		printk(KERN_DEBUG"cypress_power_on is finished.\n");
+		pr_debug("cypress_power_on is finished.\n");
 	} else {
 		ret = regulator_disable(reg_l23);
 		if (ret) {
-			printk(KERN_ERR"disable l23 failed, rc=%d\n", ret);
+			printk("disable l23 failed, rc=%d\n", ret);
 			return;
 		}
 
 		ret = regulator_disable(reg_l11);
 		if (ret) {
-			printk(KERN_ERR"disable l11 failed, rc=%d\n", ret);
+			pr_err("disable l11 failed, rc=%d\n", ret);
 			return;
 		}
-		printk(KERN_DEBUG"cypress_power_off is finished.\n");
+		pr_debug("cypress_power_off is finished.\n");
 	}
 }
 
@@ -1203,7 +1211,7 @@ static void cypress_gpio_init(void)
 		gpio_tlmm_config(GPIO_CFG(GPIO_TOUCHKEY_SDA, 0, GPIO_CFG_INPUT,
 			GPIO_CFG_NO_PULL, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
 
-	printk(KERN_DEBUG "END %s\n",__func__);
+	pr_debug( "END %s\n",__func__);
 }
 */
 #endif
@@ -2000,13 +2008,13 @@ static int initialize_ssp_gpio(void)
 	pm8xxx_gpio_config(GPIO_AP_MCU_INT, &ap_mcu_int_cfg);
 	err = gpio_request(GPIO_AP_MCU_INT, "AP_MCU_INT");
 	if (err)
-		printk(KERN_ERR "failed to request AP_MCU_INT for SSP\n");
+		pr_err("failed to request AP_MCU_INT for SSP\n");
 	gpio_set_value_cansleep(GPIO_AP_MCU_INT, 1);
 
 	pm8xxx_gpio_config(GPIO_MCU_AP_INT, &mcu_ap_int_cfg);
 	err = gpio_request(GPIO_MCU_AP_INT, "MCU_AP_INT");
 	if (err)
-		printk(KERN_ERR "failed to request MCU_AP_INT for SSP\n");
+		pr_err("failed to request MCU_AP_INT for SSP\n");
 	else {
 		gpio_direction_input(GPIO_MCU_AP_INT);
 		gpio_free(GPIO_MCU_AP_INT);
@@ -2015,12 +2023,12 @@ static int initialize_ssp_gpio(void)
 	pm8xxx_gpio_config(GPIO_MCU_AP_INT_2, &mcu_ap_int_2_cfg);
 	err = gpio_request(GPIO_MCU_AP_INT_2, "MCU_AP_INT_2");
 	if (err)
-		printk(KERN_ERR "failed to request MCU_AP_INT_2 for SSP\n");
+		pr_err("failed to request MCU_AP_INT_2 for SSP\n");
 
 	pm8xxx_gpio_config(GPIO_MCU_NRST, &ap_mcu_nrst_cfg);
 	err = gpio_request(GPIO_MCU_NRST, "MCU_NRST");
 	if (err)
-		printk(KERN_ERR
+		pr_err(
 			"failed to request MCU_NRST for SSP\n");
 	gpio_set_value_cansleep(GPIO_MCU_NRST, 1);
 
@@ -2256,7 +2264,7 @@ static void barcode_emul_poweron(int onoff)
 			pr_err("%s: error enabling regulator\n", __func__);
 		fpga_xo = msm_xo_get(MSM_XO_TCXO_A0, "ice4_fpga");
 		if (IS_ERR(fpga_xo)) {
-			printk(KERN_ERR "%s: Couldn't get TCXO_A0 vote for ice4_fpga\n",
+			pr_err("%s: Couldn't get TCXO_A0 vote for ice4_fpga\n",
 										__func__);
 		}
 	} else {
@@ -3138,11 +3146,21 @@ static struct platform_device msm_tsens_device = {
 
 static struct msm_thermal_data msm_thermal_pdata = {
 	.sensor_id = 7,
-	.poll_ms = 250,
-	.limit_temp_degC = 60,
-	.temp_hysteresis_degC = 10,
-	.freq_step = 2,
-	.core_limit_temp_degC = 80,
+#ifdef CONFIG_CPU_OVERCLOCK
+    .limit_temp_degC = 80,
+#else
+    .limit_temp_degC = 70,
+#endif
+    .temp_hysteresis_degC = 10,
+    .freq_step = 2,
+#ifdef CONFIG_INTELLI_THERMAL
+    .freq_control_mask = 0xf,
+#endif
+#ifdef CONFIG_CPU_OVERCLOCK
+    .core_limit_temp_degC = 90,
+#else
+    .core_limit_temp_degC = 80,
+#endif
 	.core_temp_hysteresis_degC = 10,
 	.core_control_mask = 0xe,
 };
@@ -5218,6 +5236,16 @@ static void __init apq8064_common_init(void)
 	apq8064_ehci_host_init();
 	apq8064_init_buses();
 
+#ifdef CONFIG_CPU_FREQ_GOV_BADASS_2_PHASE
+    set_two_phase_freq_badass(CONFIG_CPU_FREQ_GOV_BADASS_2_PHASE_FREQ);
+#endif
+#ifdef CONFIG_CPU_FREQ_GOV_BADASS_3_PHASE   
+    set_three_phase_freq_badass(CONFIG_CPU_FREQ_GOV_BADASS_3_PHASE_FREQ);
+#endif
+#ifdef CONFIG_CPU_FREQ_GOV_UBERDEMAND   
+    set_second_phase_freq(CONFIG_CPU_FREQ_GOV_UBERDEMAND_SECOND_PHASE_FREQ);
+#endif
+
 	platform_add_devices(early_common_devices,
 				ARRAY_SIZE(early_common_devices));
 	if (socinfo_get_pmic_model() != PMIC_MODEL_PM8917)
@@ -5297,7 +5325,7 @@ static void __init apq8064_common_init(void)
 	}
 
 	if (!poweroff_charging) {
-		printk(KERN_DEBUG"[slimbus] starting init set up : %d %d\n",
+		pr_debug("[slimbus] starting init set up : %d %d\n",
 				system_rev, poweroff_charging);
 	        platform_device_register(&apq8064_slim_ctrl);
         	slim_register_board_info(apq8064_slim_devices,
@@ -5321,7 +5349,7 @@ static void __init apq8064_common_init(void)
 #endif
 
 #if defined(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI) || defined(CONFIG_TOUCHSCREEN_ATMEL_MXTS)
-	printk(KERN_DEBUG"[TSP] System revision, LPM mode : %d %d\n",
+	pr_debug("[TSP] System revision, LPM mode : %d %d\n",
 				system_rev, poweroff_charging);
 	if (!poweroff_charging) {
 		if (sec_tsp_synaptics_mode)
